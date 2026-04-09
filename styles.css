@@ -1,15 +1,17 @@
+Resetting defaults
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 .login-page {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #0d0d0d 0%, #5b5b5b 100%);
+    background: radial-gradient(circle at center, #2c4e50 0%, #1e3a3c 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0;
-}
-
-.login-page * {
-    box-sizing: border-box;
 }
 
 .login-container {
@@ -19,22 +21,77 @@
 }
 
 .login-box {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     padding: 40px;
+    text-align: center;
 }
 
 .login-box h1 {
-    color: #333;
-    text-align: center;
-    margin-bottom: 5px;
-    font-size: 28px;
+    color: #1e3a3c;
+    margin-bottom: 8px;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 
 .subtitle {
     text-align: center;
     color: #666;
     margin-bottom: 30px;
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.login-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left; 
+}
+
+.login-box label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: -10px; 
+}
+
+.login-box input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: #38bfc9;
+    box-shadow: 0 0 0 3px rgba(56, 191, 201, 0.2);
+}
+
+.login-box button {
+    margin-top: 10px;
+    padding: 14px;
+    background-color: #1e3a3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-box button:hover {
+    background-color: #38bfc9; 
+}
+
+@media (max-width: 400px) {
+    .login-box {
+        padding: 30px 20px;
+    }
 }
