@@ -1,5 +1,17 @@
+<<<<<<< HEAD
 *, *::before, *::after {
     box-sizing: border-box;
+=======
+.whole-dashboard {
+    background-color: white;
+}
+
+.left-bar {
+    width: 12%;
+    height: 100%;
+    display: flex;
+    background-color: black;
+>>>>>>> ad22188aefbc9a4b5b670056daf6a78c11ca399d
     margin: 0;
     padding: 0;
 }
@@ -8,6 +20,7 @@ html, body {
     height: 100%;
 }
 
+<<<<<<< HEAD
 .whole-dashboard {
     display: flex;
     height: 100%;
@@ -38,6 +51,10 @@ html, body {
 }
 
 .menu ul {
+=======
+.menu ul li, a {
+    font-size: 1.1rem;
+>>>>>>> ad22188aefbc9a4b5b670056daf6a78c11ca399d
     list-style: none;
     padding: 0;
     text-align: center;
@@ -578,6 +595,7 @@ html, body {
     display: block;
 }
 
+<<<<<<< HEAD
 .menu ul li a:hover {
     opacity: 0.75;
     background-color: white;
@@ -611,3 +629,154 @@ html, body {
         margin-bottom: 12px;
     }
 }
+=======
+/* Login page styles are scoped so they do not affect the dashboard */
+.login-page {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0d0d0d 0%, #5b5b5b 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-page * {
+    box-sizing: border-box;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+}
+
+.login-box h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 5px;
+    font-size: 28px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
+}
+
+.form-group.checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.form-group.checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.form-group.checkbox label {
+    margin-bottom: 0;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #303136 0%, #121212 100%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.footer-links {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+}
+
+.footer-links a {
+    color: #121212;
+    text-decoration: none;
+    margin: 0 5px;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #121212;
+    text-decoration: underline;
+}
+
+.footer-links span {
+    color: #ddd;
+    margin: 0 8px;
+}
+
+@media (max-width: 480px) {
+    .login-box {
+        padding: 30px 20px;
+    }
+
+    .login-box h1 {
+        font-size: 24px;
+    }
+
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
+        padding: 10px 12px;
+    }
+}
+>>>>>>> ad22188aefbc9a4b5b670056daf6a78c11ca399d
