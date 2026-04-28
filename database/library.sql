@@ -97,6 +97,31 @@ INSERT INTO `students` (`student_id`, `first_name`, `last_name`, `email`, `enrol
 (4, 'Emma', 'Diaz', 'emma.diaz@example.com', '2022-11-10'),
 (5, 'Mia', 'Walker', 'mia.walker@example.com', '2023-07-05');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `role` enum('admin','librarian') NOT NULL DEFAULT 'librarian',
+  `reset_token` varchar(64) DEFAULT NULL,
+  `reset_expires_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `full_name`, `email`, `password_hash`, `role`, `reset_token`, `reset_expires_at`, `created_at`) VALUES
+(1, 'Admin User', 'admin@libraread.local', '$2y$12$.W2nPIrIwCh0BQhybR9uhu0rcfuWdmF4b72dxdYBmHu1fidszi/pG', 'admin', NULL, NULL, '2026-04-08 08:20:00'),
+(2, 'Library Staff', 'staff@libraread.local', '$2y$12$.W2nPIrIwCh0BQhybR9uhu0rcfuWdmF4b72dxdYBmHu1fidszi/pG', 'librarian', NULL, NULL, '2026-04-08 08:25:00');
+
 --
 -- Indexes for dumped tables
 --
@@ -123,6 +148,14 @@ ALTER TABLE `students`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`user_id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD UNIQUE KEY `reset_token` (`reset_token`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -143,6 +176,12 @@ ALTER TABLE `borrow_records`
 --
 ALTER TABLE `students`
   MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
