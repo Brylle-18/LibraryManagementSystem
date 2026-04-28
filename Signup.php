@@ -1,12 +1,11 @@
 <?php
-<<<<<<< HEAD
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/config.php';
 
 if (is_logged_in()) {
-    redirect('index.php');
+    redirect('dashboard.php');
 }
 
 $error = null;
@@ -26,27 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Password must be at least 8 characters long.';
     } else {
         try {
-            $check = db()->prepare('SELECT user_id FROM users WHERE email = :email LIMIT 1');
+            $pdo = db();
+            $check = $pdo->prepare('SELECT user_id FROM users WHERE email = :email LIMIT 1');
             $check->execute([':email' => $email]);
 
             if ($check->fetch()) {
                 $error = 'That email is already registered.';
             } else {
-                $insert = db()->prepare(
-                    "INSERT INTO users (full_name, email, password_hash, role, created_at)
-                     VALUES (:full_name, :email, :password_hash, 'librarian', NOW())"
-                );
-                $insert->execute([
-                    ':full_name' => $fullName,
-                    ':email' => $email,
-                    ':password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                ]);
+                create_user($pdo, $fullName, $email, $password, 'librarian');
 
                 set_flash('flash_success', 'Account created successfully. You can now sign in.');
                 redirect('login.php');
             }
         } catch (PDOException $exception) {
-            $error = 'Unable to create the account right now. Please confirm the database is imported and running.';
+            $error = 'Unable to create the account right now. Please check your database setup.';
         }
     }
 }
@@ -57,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library Management System - Sign Up</title>
-    <link rel="stylesheet" href="Signup.css">
+    <link rel="stylesheet" href="signup.css">
 </head>
 <body class="signup-page">
     <div class="signup-container">
@@ -73,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="form-alert success"><?= h($success) ?></p>
             <?php endif; ?>
 
-            <form method="post" action="Signup.php">
+            <form method="post" action="signup.php">
                 <div class="form-group">
                     <label for="full_name">Full Name</label>
                     <input type="text" id="full_name" name="full_name" value="<?= h($fullName) ?>" required>
@@ -104,7 +96,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </body>
 </html>
-=======
-header('Location: pages/register.php');
-exit();
->>>>>>> fc13e6246d6839701f37ea3c1b57bf664a82355c
