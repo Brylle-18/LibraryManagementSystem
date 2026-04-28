@@ -1,4 +1,5 @@
 <?php
+<<<<<<< HEAD
 
 declare(strict_types=1);
 
@@ -103,3 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </body>
 </html>
+=======
+header('Location: pages/register.php');
+exit();
+>>>>>>> fc13e6246d6839701f37ea3c1b57bf664a82355c

@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="login-box">
             <h1>Libraread</h1>
             <p class="subtitle">Sign In</p>
+<<<<<<< HEAD:login.php
 
             <?php if ($error !== null): ?>
                 <p class="form-alert error"><?= h($error) ?></p>
@@ -65,6 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="post" action="login.php">
+=======
+            
+            <form id="loginForm" method="POST" action="authenticate.php">
+>>>>>>> fc13e6246d6839701f37ea3c1b57bf664a82355c:Library/index.php
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input
