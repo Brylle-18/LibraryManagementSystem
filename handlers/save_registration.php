@@ -35,6 +35,12 @@ if (strlen($password) < 8) {
 
 $checkSql = "SELECT user_id FROM users WHERE email = ? LIMIT 1";
 $checkStmt = $conn->prepare($checkSql);
+
+if (!$checkStmt) {
+    header('Location: ../pages/register.php?error=server');
+    exit();
+}
+
 $checkStmt->bind_param('s', $email);
 $checkStmt->execute();
 $checkStmt->store_result();
@@ -47,6 +53,12 @@ if ($checkStmt->num_rows > 0) {
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 $insertSql = "INSERT INTO users (role_id, full_name, email, password_hash, is_active) VALUES (2, ?, ?, ?, 1)";
 $insertStmt = $conn->prepare($insertSql);
+
+if (!$insertStmt) {
+    header('Location: ../pages/register.php?error=server');
+    exit();
+}
+
 $insertStmt->bind_param('sss', $fullName, $email, $hashedPassword);
 
 if ($insertStmt->execute()) {
@@ -56,9 +68,4 @@ if ($insertStmt->execute()) {
 
 header('Location: ../pages/register.php?error=server');
 exit();
-
-
-
-
-
 

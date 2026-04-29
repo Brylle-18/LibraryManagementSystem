@@ -8,66 +8,94 @@
     <title>Register</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fc;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5e6d3 0%, #e8d4bb 100%);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
         }
         .container {
             width: 100%;
             max-width: 450px;
             background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(139, 111, 71, 0.2);
             border-radius: 8px;
-            padding: 20px;
+            padding: 40px;
+            border: 2px solid #8b6f47;
         }
         h2 {
             text-align: center;
-            color: #333;
+            color: #6b4423;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 700;
         }
         form {
             display: flex;
             flex-direction: column;
+            gap: 18px;
         }
         label {
             font-size: 14px;
-            margin-bottom: 5px;
-            color: #555;
+            color: #6b4423;
+            font-weight: 500;
         }
         input {
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
+            padding: 14px 16px;
+            border: 1px solid #d4a574;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 15px;
+            color: #333333;
+            background-color: #ffffff;
+            transition: border-color 0.2s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: #8b6f47;
+            box-shadow: 0 0 5px rgba(139, 111, 71, 0.3);
         }
         button {
-            padding: 10px;
-            font-size: 16px;
+            padding: 14px;
+            font-size: 15px;
             color: white;
-            background-color: #007bff;
+            background-color: #8b6f47;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 10px;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #6b4423;
+            box-shadow: 0 4px 12px rgba(107, 68, 35, 0.3);
         }
         .form-toggle {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6b4423;
         }
         .form-toggle a {
-            color: #007bff;
+            color: #6b4423;
             text-decoration: none;
-            font-size: 14px;
+            font-weight: 500;
         }
         .form-toggle a:hover {
             text-decoration: underline;
+            color: #8b6f47;
+        }
+        .error-message {
+            background-color: #fff4f4;
+            border: 1px solid #ffc6c6;
+            color: #8a2222;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -75,7 +103,7 @@
 <div class="container">
     <h2>Create Account</h2>
     <?php if (isset($_GET['error'])): ?>
-        <p style="color:#b00020; text-align:center; margin-bottom:12px;">
+        <div class="error-message">
             <?php
             $error = $_GET['error'];
             if ($error === 'missing') {
@@ -92,20 +120,28 @@
                 echo 'Unable to register right now. Please try again.';
             }
             ?>
-        </p>
+        </div>
     <?php endif; ?>
     <form method="POST" action="../handlers/save_registration.php">
-        <label>Full Name:</label>
-        <input type="text" name="full_name" required>
+        <div>
+            <label for="full_name">Full Name:</label>
+            <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required>
+        </div>
 
-        <label>Email:</label>
-        <input type="email" name="email" required>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
 
-        <label>Password:</label>
-        <input type="password" name="password" required>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Minimum 8 characters" required>
+        </div>
 
-        <label>Confirm Password:</label>
-        <input type="password" name="confirm_password" required>
+        <div>
+            <label for="confirm_password">Confirm Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required>
+        </div>
 
         <button type="submit">Register</button>
     </form>

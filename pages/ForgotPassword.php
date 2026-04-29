@@ -21,19 +21,25 @@
 		} else {
 			$lookupSql = "SELECT user_id FROM users WHERE email = ? LIMIT 1";
 			$lookupStmt = $conn->prepare($lookupSql);
-			$lookupStmt->bind_param('s', $email);
-			$lookupStmt->execute();
-			$lookupResult = $lookupStmt->get_result();
+			
+			if ($lookupStmt) {
+				$lookupStmt->bind_param('s', $email);
+				$lookupStmt->execute();
+				$lookupResult = $lookupStmt->get_result();
 
-			if ($lookupResult->num_rows === 1) {
-				$user = $lookupResult->fetch_assoc();
-				$token = bin2hex(random_bytes(32));
-				$expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+				if ($lookupResult->num_rows === 1) {
+					$user = $lookupResult->fetch_assoc();
+					$token = bin2hex(random_bytes(32));
+					$expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-				$insertSql = "INSERT INTO password_resets (user_id, reset_token, expires_at) VALUES (?, ?, ?)";
-				$insertStmt = $conn->prepare($insertSql);
-				$insertStmt->bind_param('iss', $user['user_id'], $token, $expiresAt);
-				$insertStmt->execute();
+					$insertSql = "INSERT INTO password_resets (user_id, reset_token, expires_at) VALUES (?, ?, ?)";
+					$insertStmt = $conn->prepare($insertSql);
+					
+					if ($insertStmt) {
+						$insertStmt->bind_param('iss', $user['user_id'], $token, $expiresAt);
+						$insertStmt->execute();
+					}
+				}
 			}
 
 			$statusClass = 'success';

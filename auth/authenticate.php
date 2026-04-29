@@ -18,6 +18,11 @@ if ($email === '' || $password === '') {
 
 $sql = "SELECT user_id, full_name, email, password_hash, role_id, is_active FROM users WHERE email = ? LIMIT 1";
 $stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+  die("Database error: " . $conn->error);
+}
+
 $stmt->bind_param('s', $email);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -42,25 +47,30 @@ $roleId = $_SESSION['role_id'];
 
 $updateSql = "UPDATE users SET last_login_at = NOW() WHERE user_id = ?";
 $updateStmt = $conn->prepare($updateSql);
-$updateStmt->bind_param('i', $_SESSION['user_id']);
-$updateStmt->execute();
+if ($updateStmt) {
+  $updateStmt->bind_param('i', $_SESSION['user_id']);
+  $updateStmt->execute();
+}
 
 if ($remember === 1) {
   $token = bin2hex(random_bytes(32));
   $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
   $insertSessionSql = "INSERT INTO user_sessions (user_id, session_token, remember_me, ip_address, user_agent, expires_at) VALUES (?, ?, 1, ?, ?, ?)";
   $insertSessionStmt = $conn->prepare($insertSessionSql);
-  $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-  $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
-  $insertSessionStmt->bind_param('issss', $_SESSION['user_id'], $token, $ipAddress, $userAgent, $expiresAt);
-  $insertSessionStmt->execute();
+  
+  if ($insertSessionStmt) {
+    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+    $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
+    $insertSessionStmt->bind_param('issss', $_SESSION['user_id'], $token, $ipAddress, $userAgent, $expiresAt);
+    $insertSessionStmt->execute();
 
-  setcookie('remember_token', $token, [
-    'expires' => strtotime($expiresAt),
-    'path' => '/',
-    'httponly' => true,
-    'samesite' => 'Lax',
-  ]);
+    setcookie('remember_token', $token, [
+      'expires' => strtotime($expiresAt),
+      'path' => '/',
+      'httponly' => true,
+      'samesite' => 'Lax',
+    ]);
+  }
 }
 
 // Route user to their role-appropriate dashboard
