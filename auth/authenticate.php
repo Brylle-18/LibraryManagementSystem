@@ -38,6 +38,7 @@ $_SESSION['user_id'] = (int)$user['user_id'];
 $_SESSION['user_name'] = $user['full_name'];
 $_SESSION['user_email'] = $user['email'];
 $_SESSION['role_id'] = (int)$user['role_id'];
+$roleId = $_SESSION['role_id'];
 
 $updateSql = "UPDATE users SET last_login_at = NOW() WHERE user_id = ?";
 $updateStmt = $conn->prepare($updateSql);
@@ -62,5 +63,13 @@ if ($remember === 1) {
   ]);
 }
 
-header('Location: ../pages/dashboard.php');
+// Route user to their role-appropriate dashboard
+// Admin (role_id=1) goes to admin dashboard for managing books, users, and borrow records
+// Student (role_id=2) goes to student dashboard for viewing their borrow history
+if ($roleId === 1) {
+  header('Location: ../pages/dashboard.php');
+  exit();
+}
+
+header('Location: ../pages/student_dashboard.php');
 exit();

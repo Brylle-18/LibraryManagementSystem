@@ -523,3 +523,109 @@ html, body {
     font-size: 0.8rem;
     color: #bbb;
 }
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+.badge-borrowed {
+    background: #eef2ff;
+    color: #3730a3;
+}
+.badge-returned {
+    background: #ecfdf3;
+    color: #166534;
+}
+.badge-overdue {
+    background: #fef2f2;
+    color: #991b1b;
+}
+.flash-wrap {
+    padding: 14px 28px 0;
+}
+.flash-message {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    border: 1px solid;
+}
+.flash-success {
+    background: #ecfdf3;
+    border-color: #86efac;
+    color: #14532d;
+}
+.flash-error {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #7f1d1d;
+}
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.users-form-grid {
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+}
+.borrow-form-grid {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+}
+.admin-form-grid input,
+.admin-form-grid select,
+.table-input {
+    width: 100%;
+    border: 1px solid #d4d4d4;
+    background: #fff;
+    color: #222;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+}
+.table-input-small {
+    max-width: 80px;
+}
+.search-form {
+    margin-left: 0;
+    width: 100%;
+    max-width: 540px;
+}
+.check-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #333;
+    padding: 8px 4px;
+}
+.check-inline.compact {
+    padding: 0;
+}
+.mini-btn {
+    border: 1px solid #111;
+    background: #111;
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+.mini-btn:hover {
+    opacity: 0.9;
+}
+.mini-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+.mini-btn-danger {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}
+.action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
