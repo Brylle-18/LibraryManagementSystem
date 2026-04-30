@@ -1,0 +1,6 @@
+mysql-8.4/
+*.log
+*.err
+*.pid
+*.tmp
+.DS_Store

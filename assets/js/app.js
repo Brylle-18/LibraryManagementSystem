@@ -1,0 +1,88 @@
+function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const el = document.getElementById('topbar-time');
+    if (el) el.innerHTML = `${timeStr}<br>${dateStr}`;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// URL-driven page state: read ?page= and ?tab= from query string to set active states
+const dashboardParams = new URLSearchParams(window.location.search);
+const activePageFromQuery = dashboardParams.get('page') || 'dashboard';
+
+// Set initial active states from URL
+document.querySelectorAll('.menu ul li a').forEach(a => a.classList.remove('active'));
+document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+const targetNav = document.querySelector(`.menu ul li a[data-page="${activePageFromQuery}"]`);
+const targetPage = document.getElementById('page-' + activePageFromQuery);
+if (targetNav && targetPage) {
+    targetNav.classList.add('active');
+    targetPage.classList.add('active');
+}
+
+// Handle navigation link clicks
+document.querySelectorAll('.menu ul li a[data-page]').forEach(link => {
+    link.addEventListener('click', e => {
+        e.preventDefault();
+        const page = link.dataset.page;
+        
+        // Navigate to the new page with query parameter
+        const url = new URL(window.location);
+        url.searchParams.set('page', page);
+        window.history.pushState({ page: page }, '', url.toString());
+        
+        // Update active states
+        document.querySelectorAll('.menu ul li a').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page)?.classList.add('active');
+    });
+});
+
+// Handle tab clicks
+document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab[data-tab]').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-' + target)?.classList.add('active');
+    });
+});
+
+// Draw chart on page load
+window.addEventListener('load', () => {
+    const ctx = document.getElementById('borrowChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+
+    const chartSource = window.borrowChartData || {};
+    const borrowedTotal = Number(ctx.dataset.borrowed ?? chartSource.borrowed ?? 0);
+    const returnedTotal = Number(ctx.dataset.returned ?? chartSource.returned ?? 0);
+    const chartValues = (borrowedTotal + returnedTotal) > 0 ? [borrowedTotal, returnedTotal] : [0, 0];
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Total Borrowed Books', 'Total Returned Books'],
+            datasets: [{
+                data: chartValues,
+                backgroundColor: ['#111111', '#888888'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: item => ` ${item.label}: ${item.parsed}`
+                    }
+                }
+            }
+        }
+    });
+});
