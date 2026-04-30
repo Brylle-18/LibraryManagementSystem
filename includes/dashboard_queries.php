@@ -11,10 +11,10 @@ function fetch_dashboard_stats(PDO $pdo): array
 {
     $row = $pdo->query(
         'SELECT
-            (SELECT COUNT(*) FROM users  WHERE is_active = 1)          AS users,
-            (SELECT COUNT(*) FROM books  WHERE is_active = 1)          AS books,
-            (SELECT COUNT(*) FROM borrow_records WHERE returned_at IS NULL)      AS borrowed,
-            (SELECT COUNT(*) FROM borrow_records WHERE returned_at IS NOT NULL)  AS returned'
+            (SELECT COUNT(*) FROM users  WHERE is_active = 1)                           AS users,
+            (SELECT COUNT(*) FROM books)                                                 AS books,
+            (SELECT COUNT(*) FROM borrow_records WHERE return_date IS NULL AND status = \'approved\') AS borrowed,
+            (SELECT COUNT(*) FROM borrow_records WHERE return_date IS NOT NULL OR status = \'returned\') AS returned'
     )->fetch();
 
     return [
@@ -46,8 +46,16 @@ function fetch_admins(PDO $pdo): array
 function fetch_overdue_borrowers(PDO $pdo): array
 {
     return $pdo->query(
-        'SELECT user_id, full_name, email, title, overdue_days, due_date
-         FROM   v_overdue_borrows
+        'SELECT u.user_id, u.full_name, u.email,
+                b.title,
+                br.borrow_date,
+                DATEDIFF(CURDATE(), DATE_ADD(br.borrow_date, INTERVAL 14 DAY)) AS overdue_days
+         FROM   borrow_records br
+         JOIN   users u ON u.user_id = br.student_id
+         JOIN   books b ON b.book_id = br.book_id
+         WHERE  br.return_date IS NULL
+           AND  br.status = \'approved\'
+           AND  DATE_ADD(br.borrow_date, INTERVAL 14 DAY) < CURDATE()
          ORDER  BY overdue_days DESC
          LIMIT  50'
     )->fetchAll();
@@ -61,26 +69,25 @@ function fetch_borrowed_books(PDO $pdo, string $search = ''): array
     $sql = '
         SELECT
             br.borrow_id,
-            u.full_name         AS borrower,
+            u.full_name AS borrower,
             b.title,
-            DATE(br.borrowed_at) AS borrow_date,
+            br.borrow_date,
             CASE
-                WHEN br.returned_at IS NOT NULL THEN \'Returned\'
-                WHEN br.due_date < CURDATE()    THEN \'Overdue\'
+                WHEN br.return_date IS NOT NULL THEN \'Returned\'
+                WHEN br.status = \'rejected\'   THEN \'Rejected\'
+                WHEN br.status = \'pending\'    THEN \'Pending\'
+                WHEN DATE_ADD(br.borrow_date, INTERVAL 14 DAY) < CURDATE() THEN \'Overdue\'
                 ELSE \'Active\'
             END AS return_status
         FROM   borrow_records br
-        JOIN   users u ON u.user_id = br.user_id
+        JOIN   users u ON u.user_id = br.student_id
         JOIN   books b ON b.book_id = br.book_id';
 
     if ($search !== '') {
-        $sql .= '
-        WHERE  br.borrow_id   LIKE :s
-            OR u.full_name    LIKE :s
-            OR b.title        LIKE :s';
+        $sql .= ' WHERE u.full_name LIKE :s OR b.title LIKE :s OR br.borrow_id LIKE :s';
     }
 
-    $sql .= ' ORDER BY br.borrowed_at DESC LIMIT 200';
+    $sql .= ' ORDER BY br.borrow_date DESC LIMIT 200';
 
     $stmt = $pdo->prepare($sql);
     if ($search !== '') {
@@ -96,35 +103,24 @@ function fetch_borrowed_books(PDO $pdo, string $search = ''): array
 function fetch_books(PDO $pdo, string $search = ''): array
 {
     if ($search !== '') {
-        // Use FULLTEXT for speed on large catalogues, fall back to LIKE
         $stmt = $pdo->prepare(
-            'SELECT b.book_id, b.title, b.author, c.name AS category,
-                    b.available_copies, b.total_copies, b.isbn
-             FROM   books b
-             LEFT   JOIN book_categories c ON c.category_id = b.category_id
-             WHERE  b.is_active = 1
-               AND  (MATCH(b.title, b.author) AGAINST (:fts IN BOOLEAN MODE)
-                     OR b.title  LIKE :like
-                     OR b.author LIKE :like
-                     OR b.isbn   LIKE :like)
-             ORDER  BY b.title
-             LIMIT  200'
+            'SELECT book_id, title, author, category, available_copies
+             FROM   books
+             WHERE  is_active = 1
+               AND  (title LIKE :like OR author LIKE :like)
+             ORDER  BY title LIMIT 200'
         );
-        $stmt->execute([':fts' => $search . '*', ':like' => '%' . $search . '%']);
+        $stmt->execute([':like' => '%' . $search . '%']);
     } else {
         $stmt = $pdo->query(
-            'SELECT b.book_id, b.title, b.author, c.name AS category,
-                    b.available_copies, b.total_copies, b.isbn
-             FROM   books b
-             LEFT   JOIN book_categories c ON c.category_id = b.category_id
-             WHERE  b.is_active = 1
-             ORDER  BY b.title
-             LIMIT  200'
+            'SELECT book_id, title, author, category, available_copies
+             FROM   books
+             WHERE  is_active = 1
+             ORDER  BY title LIMIT 200'
         );
     }
     return $stmt->fetchAll();
 }
-
 // ============================================================
 //  Users (students) list with search
 // ============================================================
@@ -174,14 +170,12 @@ function borrow_book(PDO $pdo, int $userId, int $bookId, int $daysAllowed = 14, 
 
         // Insert borrow record
         $ins = $pdo->prepare(
-            'INSERT INTO borrow_records (user_id, book_id, borrowed_at, due_date, created_by)
-             VALUES (:uid, :bid, NOW(), DATE_ADD(CURDATE(), INTERVAL :days DAY), :cby)'
+            "INSERT INTO borrow_records (student_id, book_id, borrow_date, status)
+             VALUES (:uid, :bid, CURDATE(), 'approved')"
         );
         $ins->execute([
-            ':uid'  => $userId,
-            ':bid'  => $bookId,
-            ':days' => $daysAllowed,
-            ':cby'  => $createdBy,
+            ':uid' => $userId,
+            ':bid' => $bookId,
         ]);
         $borrowId = (int) $pdo->lastInsertId();
 
@@ -203,7 +197,7 @@ function return_book(PDO $pdo, int $borrowId): void
     db_transaction(function (PDO $pdo) use ($borrowId): void {
         // Lock borrow record
         $stmt = $pdo->prepare(
-            'SELECT borrow_id, book_id, returned_at FROM borrow_records WHERE borrow_id = :id FOR UPDATE'
+            'SELECT borrow_id, book_id, status FROM borrow_records WHERE borrow_id = :id FOR UPDATE'
         );
         $stmt->execute([':id' => $borrowId]);
         $record = $stmt->fetch();
@@ -211,12 +205,12 @@ function return_book(PDO $pdo, int $borrowId): void
         if (!$record) {
             throw new RuntimeException('Borrow record not found.');
         }
-        if ($record['returned_at'] !== null) {
+        if ($record['status'] === 'returned') {
             throw new RuntimeException('Book has already been returned.');
         }
 
         // Mark as returned
-        $pdo->prepare('UPDATE borrow_records SET returned_at = NOW() WHERE borrow_id = :id')
+        $pdo->prepare("UPDATE borrow_records SET status = 'returned', return_date = CURDATE() WHERE borrow_id = :id")
             ->execute([':id' => $borrowId]);
 
         // Restore available copies
@@ -225,4 +219,74 @@ function return_book(PDO $pdo, int $borrowId): void
 
         audit('book.return', $borrowId, 'borrow_records', ['book_id' => $record['book_id']]);
     });
+}
+
+// ============================================================
+//  Manage Books — all active books with current borrower
+// ============================================================
+function fetch_manage_books(PDO $pdo): array
+{
+    return $pdo->query(
+        "SELECT b.book_id, b.title, b.author,
+                b.category,
+                b.available_copies,
+                (SELECT u.full_name
+                 FROM   borrow_records br
+                 JOIN   users u ON u.user_id = br.student_id
+                 WHERE  br.book_id = b.book_id AND br.status = 'approved'
+                 AND    br.return_date IS NULL
+                 LIMIT  1) AS current_borrower
+         FROM   books b
+         WHERE  b.is_active = 1
+         ORDER  BY b.title"
+    )->fetchAll();
+}
+
+// ============================================================
+//  Book categories for dropdown
+// ============================================================
+function fetch_book_categories(PDO $pdo): array
+{
+    return $pdo->query(
+        'SELECT DISTINCT category AS name FROM books WHERE category IS NOT NULL ORDER BY category'
+    )->fetchAll();
+}
+
+// ============================================================
+//  Borrow Requests — pending
+// ============================================================
+function fetch_pending_requests(PDO $pdo): array
+{
+    return $pdo->query(
+        "SELECT br.borrow_id, u.full_name, u.email, b.title,
+                br.borrow_date AS requested_date,
+                DATE_ADD(br.borrow_date, INTERVAL 14 DAY) AS due_date
+         FROM   borrow_records br
+         JOIN   users u ON u.user_id = br.student_id
+         JOIN   books b ON b.book_id = br.book_id
+         WHERE  br.status = 'pending'
+         ORDER  BY br.borrow_date ASC"
+    )->fetchAll();
+}
+
+// ============================================================
+//  Borrow Requests — all borrows
+// ============================================================
+function fetch_all_borrows(PDO $pdo): array
+{
+    return $pdo->query(
+        "SELECT br.borrow_id, u.full_name, b.title, br.status,
+                br.borrow_date,
+                DATE_ADD(br.borrow_date, INTERVAL 14 DAY) AS due_date,
+                br.return_date,
+                CASE WHEN DATE_ADD(br.borrow_date, INTERVAL 14 DAY) < CURDATE()
+                          AND br.status = 'approved'
+                     THEN DATEDIFF(CURDATE(), DATE_ADD(br.borrow_date, INTERVAL 14 DAY))
+                     ELSE NULL END AS overdue_days
+         FROM   borrow_records br
+         JOIN   users u ON u.user_id = br.student_id
+         JOIN   books b ON b.book_id = br.book_id
+         ORDER  BY br.borrow_date DESC
+         LIMIT  200"
+    )->fetchAll();
 }

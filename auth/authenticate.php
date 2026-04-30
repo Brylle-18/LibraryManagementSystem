@@ -1,85 +1,66 @@
 <?php
-session_start();
-include '../config/db_connection.php';
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../includes/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  header('Location: ../index.php');
-  exit();
+    redirect('../pages/login.php');
 }
 
-$email = trim($_POST['email'] ?? '');
-$password = $_POST['password'] ?? '';
-$remember = isset($_POST['remember']) ? 1 : 0;
+$email    = trim((string) ($_POST['email']    ?? ''));
+$password = (string)       ($_POST['password'] ?? '');
 
 if ($email === '' || $password === '') {
-  header('Location: ../index.php?error=missing');
-  exit();
+    set_flash('flash_error', 'Please enter both your email and password.');
+    redirect('../pages/login.php');
 }
 
-$sql = "SELECT user_id, full_name, email, password_hash, role_id, is_active FROM users WHERE email = ? LIMIT 1";
-$stmt = $conn->prepare($sql);
+try {
+    $stmt = db()->prepare(
+        'SELECT user_id, full_name, email, password_hash, role, is_active
+         FROM   users
+         WHERE  email = :email
+         LIMIT  1'
+    );
+    $stmt->execute([':email' => $email]);
+    $user = $stmt->fetch();
 
-if (!$stmt) {
-  die("Database error: " . $conn->error);
+    if ($user && (int) $user['is_active'] === 1 && password_verify($password, $user['password_hash'])) {
+
+        session_regenerate_id(true);
+
+        $_SESSION['user'] = [
+            'id'    => (int) $user['user_id'],
+            'name'  => $user['full_name'],
+            'email' => $user['email'],
+            'role'  => $user['role'],
+        ];
+
+        // Silently upgrade any legacy hash to bcrypt cost-12
+        if (password_needs_rehash($user['password_hash'], PASSWORD_BCRYPT, ['cost' => 12])) {
+            db()->prepare('UPDATE users SET password_hash = :h WHERE user_id = :id')
+                ->execute([
+                    ':h'  => password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]),
+                    ':id' => $user['user_id'],
+                ]);
+        }
+
+        audit('user.login', (int) $user['user_id'], 'users');
+
+        // Role-based redirect
+        $role = $_SESSION['user']['role'];
+        if ($role === 'student') {
+            redirect('../pages/userdashboard.php');
+        } else {
+            redirect('../pages/dashboard.php');
+        }
+    }
+
+    set_flash('flash_error', 'Invalid email or password.');
+    redirect('../pages/login.php');
+
+} catch (PDOException $e) {
+    set_flash('flash_error', 'Unable to sign in right now. Please confirm the database is imported and running.');
+    redirect('../pages/login.php');
 }
-
-$stmt->bind_param('s', $email);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows !== 1) {
-  header('Location: ../index.php?error=invalid');
-  exit();
-}
-
-$user = $result->fetch_assoc();
-
-if ((int)$user['is_active'] !== 1 || !password_verify($password, $user['password_hash'])) {
-  header('Location: ../index.php?error=invalid');
-  exit();
-}
-
-$_SESSION['user_id'] = (int)$user['user_id'];
-$_SESSION['user_name'] = $user['full_name'];
-$_SESSION['user_email'] = $user['email'];
-$_SESSION['role_id'] = (int)$user['role_id'];
-$roleId = $_SESSION['role_id'];
-
-$updateSql = "UPDATE users SET last_login_at = NOW() WHERE user_id = ?";
-$updateStmt = $conn->prepare($updateSql);
-if ($updateStmt) {
-  $updateStmt->bind_param('i', $_SESSION['user_id']);
-  $updateStmt->execute();
-}
-
-if ($remember === 1) {
-  $token = bin2hex(random_bytes(32));
-  $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
-  $insertSessionSql = "INSERT INTO user_sessions (user_id, session_token, remember_me, ip_address, user_agent, expires_at) VALUES (?, ?, 1, ?, ?, ?)";
-  $insertSessionStmt = $conn->prepare($insertSessionSql);
-  
-  if ($insertSessionStmt) {
-    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-    $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255);
-    $insertSessionStmt->bind_param('issss', $_SESSION['user_id'], $token, $ipAddress, $userAgent, $expiresAt);
-    $insertSessionStmt->execute();
-
-    setcookie('remember_token', $token, [
-      'expires' => strtotime($expiresAt),
-      'path' => '/',
-      'httponly' => true,
-      'samesite' => 'Lax',
-    ]);
-  }
-}
-
-// Route user to their role-appropriate dashboard
-// Admin (role_id=1) goes to admin dashboard for managing books, users, and borrow records
-// Student (role_id=2) goes to student dashboard for viewing their borrow history
-if ($roleId === 1) {
-  header('Location: ../pages/dashboard.php');
-  exit();
-}
-
-header('Location: ../pages/student_dashboard.php');
-exit();

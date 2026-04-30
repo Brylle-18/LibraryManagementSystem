@@ -5,7 +5,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/config.php';
 
 if (is_logged_in()) {
-    redirect('dashboard.php');
+    $role = strtolower((string) ($_SESSION['user']['role'] ?? ''));
+    if ($role === 'student') {
+        redirect('userdashboard.php');
+    } else {
+        redirect('dashboard.php');
+    }
 }
 
 $error   = get_flash('flash_error');
@@ -48,9 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':id' => $user['user_id'],
                         ]);
                 }
-
                 audit('user.login', (int) $user['user_id'], 'users');
-                redirect('dashboard.php');
+                $role = strtolower((string) ($user['role'] ?? ''));
+                if ($role === 'student') {
+                    redirect('userdashboard.php');
+                } else {
+                    redirect('dashboard.php');
+}
             }
 
             $error = 'Invalid email or password.';
