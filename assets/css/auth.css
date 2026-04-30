@@ -14,7 +14,6 @@
     --surface:   #faf9f7;
     --white:     #ffffff;
     --brand-bg:  #0f0f0f;
-    --accent:    #2563eb;
     --danger:    #c0392b;
     --success-bg:#f0fdf4;
     --error-bg:  #fff5f5;
@@ -114,7 +113,7 @@ body.auth-page {
     align-items: center;
     justify-content: center;
     padding: 48px 32px;
-    background: var(--surface);
+    background: var(--white);
 }
 
 .auth-box {
